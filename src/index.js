@@ -133,6 +133,24 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`📱  Capacitor    →  capacitor://localhost + http://localhost allowed\n`);
 });
 
+// ── Auto-seed if database is empty (runs once on first deploy) ───────────────
+const autoSeed = async () => {
+  try {
+    const count = await prisma.user.count();
+    if (count === 0) {
+      console.log('🌱 Empty database — running seed...');
+      const seed = require('./seed');
+      await (typeof seed === 'function' ? seed(prisma) : seed.default?.(prisma) || seed.run?.(prisma));
+      console.log('✅ Auto-seed complete');
+    } else {
+      console.log(`ℹ️  Database has ${count} users — skipping seed`);
+    }
+  } catch (e) {
+    console.log('⚠️  Auto-seed skipped:', e.message);
+  }
+};
+autoSeed();
+
 // ── Graceful shutdown (Railway sends SIGTERM before stopping) ─────────────────
 const shutdown = async (signal) => {
   console.log(`\nReceived ${signal} — shutting down gracefully…`);

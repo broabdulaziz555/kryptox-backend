@@ -213,6 +213,68 @@ async function main() {
   console.log('  @cafebar  → cafebar@demo.com (business)');
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+// ── Run standalone: node src/seed.js
+// ── Or called from index.js: require('./seed')(existingPrisma)
+if (require.main === module) {
+  main()
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());
+}
+
+// Export so index.js can call it with its own prisma instance
+module.exports = async function(externalPrisma) {
+  // If called externally, swap out the prisma instance
+  if (externalPrisma) {
+    // re-run main logic inline with external prisma
+    const bcrypt2 = require('bcryptjs');
+    const { ethers: eth2 } = require('ethers');
+    const pw = await bcrypt2.hash('demo1234', 12);
+
+    const demos = [
+      { username:'aziz',     email:'aziz@demo.com',     isBusiness:false },
+      { username:'kamol',    email:'kamol@demo.com',     isBusiness:false },
+      { username:'jasur',    email:'jasur@demo.com',     isBusiness:false },
+      { username:'techshop', email:'techshop@demo.com',  isBusiness:true  },
+      { username:'cafebar',  email:'cafebar@demo.com',   isBusiness:true  },
+    ];
+
+    const startBalance = JSON.stringify({ USDT:100, ETH:0.05, BTC:0.001, SOL:2 });
+
+    for (const d of demos) {
+      const wallet = eth2.Wallet.createRandom();
+      await externalPrisma.user.upsert({
+        where:  { username: d.username },
+        update: {},
+        create: {
+          username:       d.username,
+          email:          d.email,
+          passwordHash:   pw,
+          publicAddress:  wallet.address,
+          isBusiness:     d.isBusiness,
+          isEmailVerified:true,
+          demoBalances:   startBalance,
+        },
+      });
+      console.log('  ✅ seeded @' + d.username);
+    }
+
+    // Seed a couple of auctions
+    const auctions = [
+      { username:'pay',  currentBid:500,  startingBid:100 },
+      { username:'gold', currentBid:250,  startingBid:50  },
+      { username:'uz',   currentBid:180,  startingBid:50  },
+      { username:'ai',   currentBid:420,  startingBid:100 },
+    ];
+    const future = new Date(Date.now() + 7*24*3600*1000);
+    for (const a of auctions) {
+      await externalPrisma.auction.upsert({
+        where:  { username: a.username },
+        update: {},
+        create: { ...a, bidCount:0, endsAt:future, status:'ACTIVE' },
+      });
+    }
+    console.log('  ✅ seeded auctions');
+  } else {
+    await main();
+  }
+};
