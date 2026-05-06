@@ -1,0 +1,42 @@
+{
+  "name": "kryptox-backend",
+  "version": "1.0.0",
+  "description": "KRYPTOX crypto wallet + social payments backend",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "start": "npx prisma db push && node src/index.js",
+    "dev": "nodemon src/index.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "node src/seed.js",
+    "db:studio": "prisma studio",
+    "db:setup": "prisma db push && node src/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.1",
+    "express": "^4.18.3",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.11",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "zod": "^3.22.4",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "prisma": "^5.10.0"
+  }
+}
